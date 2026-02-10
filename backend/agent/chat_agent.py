@@ -68,6 +68,7 @@ async def run_agent(user_id: str, messages: list[dict]) -> dict:
             "command": sys.executable,
             "args": ["-m", "mcp_server.server"],
             "cwd": BACKEND_DIR,
+            "env": {**os.environ},
         },
     ) as server:
         agent = Agent(
