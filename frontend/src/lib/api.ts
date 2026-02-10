@@ -1,6 +1,6 @@
 import { authClient } from "./auth";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://hackathon-2-phase-2-production-0c5c.up.railway.app";
 
 async function getAuthHeaders(): Promise<HeadersInit> {
   const headers: HeadersInit = {
