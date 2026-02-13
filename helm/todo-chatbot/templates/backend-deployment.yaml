@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "todo-chatbot.fullname" . }}-backend
+  labels:
+    {{- include "todo-chatbot.backendLabels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.backend.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "todo-chatbot.backendSelectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "todo-chatbot.backendSelectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: backend
+          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+          imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+          ports:
+            - containerPort: 8000
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ include "todo-chatbot.fullname" . }}-backend-config
+            - secretRef:
+                name: {{ include "todo-chatbot.fullname" . }}-backend-secret
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.backend.probes.liveness.path }}
+              port: 8000
+            initialDelaySeconds: {{ .Values.backend.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.backend.probes.liveness.periodSeconds }}
+            failureThreshold: {{ .Values.backend.probes.liveness.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.backend.probes.readiness.path }}
+              port: 8000
+            initialDelaySeconds: {{ .Values.backend.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.backend.probes.readiness.periodSeconds }}
+            failureThreshold: {{ .Values.backend.probes.readiness.failureThreshold }}
+          resources:
+            requests:
+              cpu: {{ .Values.backend.resources.requests.cpu }}
+              memory: {{ .Values.backend.resources.requests.memory }}
+            limits:
+              cpu: {{ .Values.backend.resources.limits.cpu }}
+              memory: {{ .Values.backend.resources.limits.memory }}

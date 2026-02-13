@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "todo-chatbot.fullname" . }}-frontend
+  labels:
+    {{- include "todo-chatbot.frontendLabels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.frontend.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "todo-chatbot.frontendSelectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "todo-chatbot.frontendSelectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: frontend
+          image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}"
+          imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
+          ports:
+            - containerPort: 3000
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ include "todo-chatbot.fullname" . }}-frontend-config
+            - secretRef:
+                name: {{ include "todo-chatbot.fullname" . }}-frontend-secret
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.frontend.probes.liveness.path }}
+              port: 3000
+            initialDelaySeconds: {{ .Values.frontend.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.frontend.probes.liveness.periodSeconds }}
+            failureThreshold: {{ .Values.frontend.probes.liveness.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.frontend.probes.readiness.path }}
+              port: 3000
+            initialDelaySeconds: {{ .Values.frontend.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.frontend.probes.readiness.periodSeconds }}
+            failureThreshold: {{ .Values.frontend.probes.readiness.failureThreshold }}
+          resources:
+            requests:
+              cpu: {{ .Values.frontend.resources.requests.cpu }}
+              memory: {{ .Values.frontend.resources.requests.memory }}
+            limits:
+              cpu: {{ .Values.frontend.resources.limits.cpu }}
+              memory: {{ .Values.frontend.resources.limits.memory }}

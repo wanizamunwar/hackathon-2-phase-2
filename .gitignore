@@ -43,6 +43,9 @@ Thumbs.db
 # Docker
 *.log*
 
+# Helm local values (contains secrets)
+helm/values-local.yaml
+
 # Claude Code
 .claude/
 
