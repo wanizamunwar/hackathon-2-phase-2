@@ -1,3 +1,4 @@
+import logging
 import os
 from contextlib import asynccontextmanager
 
@@ -7,8 +8,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
 
+logging.basicConfig(level=logging.INFO)
+
 from db import create_db_and_tables
 from routes.tasks import router as tasks_router
+from routes.chat import router as chat_router
 
 
 @asynccontextmanager
@@ -32,13 +36,14 @@ if frontend_url:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
-    allow_origin_regex=r"https://hackathon-2-phase-2.*\.vercel\.app",
+    allow_origin_regex=r"https://hackathon-2-phase-(2|3).*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 app.include_router(tasks_router)
+app.include_router(chat_router)
 
 
 @app.get("/health")

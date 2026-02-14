@@ -38,3 +38,30 @@ class TaskRead(TaskBase):
     user_id: str
     created_at: datetime
     updated_at: datetime
+
+
+class Conversation(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: str = Field(index=True)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class Message(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: str = Field(index=True)
+    conversation_id: int = Field(index=True, foreign_key="conversation.id")
+    role: str = Field(max_length=20)  # "user" or "assistant"
+    content: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class ChatRequest(SQLModel):
+    conversation_id: Optional[int] = None
+    message: str
+
+
+class ChatResponse(SQLModel):
+    conversation_id: int
+    response: str
+    tool_calls: list[dict] = []

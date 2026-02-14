@@ -8,6 +8,7 @@ import TaskForm from "@/components/TaskForm";
 import TaskList from "@/components/TaskList";
 import SearchFilter from "@/components/SearchFilter";
 import SortControls from "@/components/SortControls";
+import ChatInterface from "@/components/ChatInterface";
 
 export default function DashboardPage() {
   const { data: session, isPending } = useSession();
@@ -134,6 +135,8 @@ export default function DashboardPage() {
           />
         )}
       </main>
+
+      {userId && <ChatInterface userId={userId} />}
     </div>
   );
 }

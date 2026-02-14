@@ -50,6 +50,11 @@ async def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token",
         )
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication failed: unable to verify token",
+        )
 
 
 def verify_user_access(path_user_id: str, current_user: dict) -> str:
