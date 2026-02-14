@@ -1,5 +1,16 @@
 "use client";
 
+import { Search } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
 interface SearchFilterProps {
   search: string;
   onSearchChange: (value: string) => void;
@@ -22,47 +33,52 @@ export default function SearchFilter({
   onTagChange,
 }: SearchFilterProps) {
   return (
-    <div className="bg-white p-4 rounded-lg shadow space-y-3">
-      <div>
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="Search tasks..."
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-        />
-      </div>
+    <Card>
+      <CardContent className="pt-4 space-y-3">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="text"
+            value={search}
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder="Search tasks..."
+            className="pl-9"
+          />
+        </div>
 
-      <div className="flex gap-3 flex-wrap">
-        <select
-          value={statusFilter}
-          onChange={(e) => onStatusChange(e.target.value)}
-          className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-        >
-          <option value="">All Status</option>
-          <option value="pending">Pending</option>
-          <option value="completed">Completed</option>
-        </select>
+        <div className="flex gap-3 flex-wrap">
+          <Select value={statusFilter || "all"} onValueChange={(v) => onStatusChange(v === "all" ? "" : v)}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="All Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+            </SelectContent>
+          </Select>
 
-        <select
-          value={priorityFilter}
-          onChange={(e) => onPriorityChange(e.target.value)}
-          className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-        >
-          <option value="">All Priorities</option>
-          <option value="high">High</option>
-          <option value="medium">Medium</option>
-          <option value="low">Low</option>
-        </select>
+          <Select value={priorityFilter || "all"} onValueChange={(v) => onPriorityChange(v === "all" ? "" : v)}>
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="All Priorities" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Priorities</SelectItem>
+              <SelectItem value="high">High</SelectItem>
+              <SelectItem value="medium">Medium</SelectItem>
+              <SelectItem value="low">Low</SelectItem>
+            </SelectContent>
+          </Select>
 
-        <input
-          type="text"
-          value={tagFilter}
-          onChange={(e) => onTagChange(e.target.value)}
-          placeholder="Filter by tag..."
-          className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-        />
-      </div>
-    </div>
+          <Input
+            type="text"
+            value={tagFilter}
+            onChange={(e) => onTagChange(e.target.value)}
+            placeholder="Filter by tag..."
+            className="w-[160px]"
+          />
+        </div>
+      </CardContent>
+    </Card>
   );
 }

@@ -1,13 +1,38 @@
 "use client";
 
 import { useState } from "react";
+import {
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+  Calendar,
+} from "lucide-react";
 import { api, Task } from "@/lib/api";
+import { cn } from "@/lib/utils";
 import TaskForm from "./TaskForm";
+import { Card } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
-const priorityColors: Record<string, string> = {
-  high: "bg-red-100 text-red-800",
-  medium: "bg-yellow-100 text-yellow-800",
-  low: "bg-green-100 text-green-800",
+const priorityVariant: Record<string, "destructive" | "secondary" | "outline"> = {
+  high: "destructive",
+  medium: "secondary",
+  low: "outline",
 };
 
 interface TaskItemProps {
@@ -19,7 +44,7 @@ interface TaskItemProps {
 
 export default function TaskItem({ task, userId, onTaskUpdated, onTaskDeleted }: TaskItemProps) {
   const [editing, setEditing] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleToggleComplete = async () => {
@@ -43,7 +68,7 @@ export default function TaskItem({ task, userId, onTaskUpdated, onTaskDeleted }:
       // Error handled by parent
     } finally {
       setLoading(false);
-      setConfirmDelete(false);
+      setShowDeleteDialog(false);
     }
   };
 
@@ -66,83 +91,105 @@ export default function TaskItem({ task, userId, onTaskUpdated, onTaskDeleted }:
   }
 
   return (
-    <div className={`bg-white p-4 rounded-lg shadow flex items-start gap-3 ${task.completed ? "opacity-60" : ""}`}>
-      <button
-        onClick={handleToggleComplete}
-        disabled={loading}
-        className={`mt-0.5 w-5 h-5 rounded border-2 flex-shrink-0 flex items-center justify-center ${
-          task.completed
-            ? "bg-blue-600 border-blue-600 text-white"
-            : "border-gray-300 hover:border-blue-400"
-        }`}
-        aria-label={task.completed ? "Mark incomplete" : "Mark complete"}
+    <>
+      <Card
+        className={cn(
+          "p-4 transition-all hover:shadow-md",
+          task.completed && "opacity-60"
+        )}
       >
-        {task.completed && (
-          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-          </svg>
-        )}
-      </button>
+        <div className="flex items-start gap-3">
+          <Checkbox
+            checked={task.completed}
+            onCheckedChange={handleToggleComplete}
+            disabled={loading}
+            className="mt-0.5"
+            aria-label={task.completed ? "Mark incomplete" : "Mark complete"}
+          />
 
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <h3 className={`font-medium text-gray-900 ${task.completed ? "line-through" : ""}`}>
-            {task.title}
-          </h3>
-          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${priorityColors[task.priority] || priorityColors.medium}`}>
-            {task.priority}
-          </span>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3
+                className={cn(
+                  "font-medium",
+                  task.completed && "line-through text-muted-foreground"
+                )}
+              >
+                {task.title}
+              </h3>
+              <Badge variant={priorityVariant[task.priority] || "secondary"}>
+                {task.priority}
+              </Badge>
+            </div>
+
+            {task.description && (
+              <p className="mt-1 text-sm text-muted-foreground">
+                {task.description}
+              </p>
+            )}
+
+            <div className="mt-2 flex items-center gap-2 flex-wrap">
+              {task.tags.map((tag) => (
+                <Badge key={tag} variant="outline" className="text-xs">
+                  {tag}
+                </Badge>
+              ))}
+              <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Calendar className="h-3 w-3" />
+                {new Date(task.created_at).toLocaleDateString()}
+              </span>
+            </div>
+          </div>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setEditing(true)}>
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setShowDeleteDialog(true)}
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
+      </Card>
 
-        {task.description && (
-          <p className="mt-1 text-sm text-gray-600">{task.description}</p>
-        )}
-
-        <div className="mt-2 flex items-center gap-2 flex-wrap">
-          {task.tags.map((tag) => (
-            <span key={tag} className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">
-              {tag}
-            </span>
-          ))}
-          <span className="text-xs text-gray-400">
-            {new Date(task.created_at).toLocaleDateString()}
-          </span>
-        </div>
-      </div>
-
-      <div className="flex gap-1 flex-shrink-0">
-        <button
-          onClick={() => setEditing(true)}
-          className="px-2 py-1 text-xs text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded"
-        >
-          Edit
-        </button>
-
-        {confirmDelete ? (
-          <div className="flex gap-1">
-            <button
-              onClick={handleDelete}
-              disabled={loading}
-              className="px-2 py-1 text-xs text-white bg-red-600 hover:bg-red-700 rounded disabled:opacity-50"
-            >
-              Confirm
-            </button>
-            <button
-              onClick={() => setConfirmDelete(false)}
-              className="px-2 py-1 text-xs text-gray-600 hover:bg-gray-100 rounded"
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Task</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete &quot;{task.title}&quot;? This action
+              cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteDialog(false)}
             >
               Cancel
-            </button>
-          </div>
-        ) : (
-          <button
-            onClick={() => setConfirmDelete(true)}
-            className="px-2 py-1 text-xs text-gray-600 hover:text-red-600 hover:bg-red-50 rounded"
-          >
-            Delete
-          </button>
-        )}
-      </div>
-    </div>
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={loading}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

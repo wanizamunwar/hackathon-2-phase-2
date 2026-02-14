@@ -1,13 +1,150 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import {
+  MessageSquare,
+  X,
+  Send,
+  Bot,
+  User,
+  Loader2,
+} from "lucide-react";
 import { api, ChatMessage } from "@/lib/api";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface ChatInterfaceProps {
   userId: string;
+  mode?: "widget" | "full";
 }
 
-export default function ChatInterface({ userId }: ChatInterfaceProps) {
+function ChatMessages({
+  messages,
+  loading,
+  messagesEndRef,
+}: {
+  messages: ChatMessage[];
+  loading: boolean;
+  messagesEndRef: React.RefObject<HTMLDivElement | null>;
+}) {
+  return (
+    <>
+      {messages.length === 0 && (
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center space-y-2">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+              <Bot className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <p className="text-sm font-medium">How can I help?</p>
+            <p className="text-xs text-muted-foreground">
+              Try &quot;Add a task to buy groceries&quot;
+            </p>
+          </div>
+        </div>
+      )}
+
+      {messages.map((msg, i) => (
+        <div
+          key={i}
+          className={cn(
+            "flex gap-3",
+            msg.role === "user" ? "justify-end" : "justify-start"
+          )}
+        >
+          {msg.role === "assistant" && (
+            <Avatar className="h-8 w-8 shrink-0">
+              <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                <Bot className="h-4 w-4" />
+              </AvatarFallback>
+            </Avatar>
+          )}
+          <div
+            className={cn(
+              "max-w-[80%] rounded-xl px-3 py-2 text-sm whitespace-pre-wrap",
+              msg.role === "user"
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted"
+            )}
+          >
+            {msg.content}
+          </div>
+          {msg.role === "user" && (
+            <Avatar className="h-8 w-8 shrink-0">
+              <AvatarFallback className="text-xs">
+                <User className="h-4 w-4" />
+              </AvatarFallback>
+            </Avatar>
+          )}
+        </div>
+      ))}
+
+      {loading && (
+        <div className="flex gap-3 justify-start">
+          <Avatar className="h-8 w-8 shrink-0">
+            <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+              <Bot className="h-4 w-4" />
+            </AvatarFallback>
+          </Avatar>
+          <div className="bg-muted rounded-xl px-3 py-2 text-sm text-muted-foreground flex items-center gap-2">
+            <Loader2 className="h-3 w-3 animate-spin" />
+            Thinking...
+          </div>
+        </div>
+      )}
+
+      <div ref={messagesEndRef} />
+    </>
+  );
+}
+
+function ChatInput({
+  input,
+  setInput,
+  loading,
+  onSend,
+  inputRef,
+}: {
+  input: string;
+  setInput: (v: string) => void;
+  loading: boolean;
+  onSend: () => void;
+  inputRef: React.RefObject<HTMLInputElement | null>;
+}) {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      onSend();
+    }
+  };
+
+  return (
+    <div className="flex gap-2">
+      <Input
+        ref={inputRef}
+        type="text"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        onKeyDown={handleKeyDown}
+        placeholder="Type a message..."
+        disabled={loading}
+      />
+      <Button
+        onClick={onSend}
+        disabled={loading || !input.trim()}
+        size="icon"
+      >
+        <Send className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+}
+
+export default function ChatInterface({ userId, mode = "widget" }: ChatInterfaceProps) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -22,8 +159,8 @@ export default function ChatInterface({ userId }: ChatInterfaceProps) {
   }, [messages]);
 
   useEffect(() => {
-    if (open) inputRef.current?.focus();
-  }, [open]);
+    if (open || mode === "full") inputRef.current?.focus();
+  }, [open, mode]);
 
   const handleSend = async () => {
     const text = input.trim();
@@ -49,112 +186,110 @@ export default function ChatInterface({ userId }: ChatInterfaceProps) {
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
-
-  return (
-    <>
-      {/* Chat panel — anchored to bottom-right, above the button */}
-      {open && (
-        <div className="fixed bottom-24 right-6 z-50 w-[380px] h-[520px] flex flex-col bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
-          {/* Header */}
-          <div className="px-4 py-3 bg-blue-600 text-white">
+  // Full-page mode
+  if (mode === "full") {
+    return (
+      <Card className="flex flex-col h-full">
+        <div className="px-4 py-3 border-b">
+          <div className="flex items-center gap-2">
+            <Bot className="h-5 w-5 text-primary" />
             <span className="font-semibold text-sm">AI Todo Assistant</span>
           </div>
+        </div>
 
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
-            {messages.length === 0 && (
-              <div className="flex items-center justify-center h-full text-gray-400">
-                <div className="text-center">
-                  <p className="text-sm font-medium">How can I help?</p>
-                  <p className="text-xs mt-1">
-                    Try &quot;Add a task to buy groceries&quot;
-                  </p>
-                </div>
-              </div>
-            )}
+        <ScrollArea className="flex-1 p-4">
+          <div className="space-y-4">
+            <ChatMessages
+              messages={messages}
+              loading={loading}
+              messagesEndRef={messagesEndRef}
+            />
+          </div>
+        </ScrollArea>
 
-            {messages.map((msg, i) => (
-              <div
-                key={i}
-                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-              >
-                <div
-                  className={`max-w-[80%] rounded-xl px-3 py-2 text-sm whitespace-pre-wrap ${
-                    msg.role === "user"
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-100 text-gray-900"
-                  }`}
-                >
-                  {msg.content}
-                </div>
-              </div>
-            ))}
+        {error && (
+          <div className="mx-4 mb-2">
+            <Alert variant="destructive" className="py-2">
+              <AlertDescription className="text-xs">{error}</AlertDescription>
+            </Alert>
+          </div>
+        )}
 
-            {loading && (
-              <div className="flex justify-start">
-                <div className="bg-gray-100 rounded-xl px-3 py-2 text-sm text-gray-500">
-                  Thinking...
-                </div>
-              </div>
-            )}
+        <div className="border-t p-4">
+          <ChatInput
+            input={input}
+            setInput={setInput}
+            loading={loading}
+            onSend={handleSend}
+            inputRef={inputRef}
+          />
+        </div>
+      </Card>
+    );
+  }
 
-            <div ref={messagesEndRef} />
+  // Widget mode (floating)
+  return (
+    <>
+      {open && (
+        <Card className="fixed bottom-24 right-6 z-50 w-[380px] h-[520px] flex flex-col overflow-hidden shadow-2xl">
+          <div className="px-4 py-3 border-b flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Bot className="h-5 w-5 text-primary" />
+              <span className="font-semibold text-sm">AI Todo Assistant</span>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => setOpen(false)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
           </div>
 
-          {/* Error */}
+          <ScrollArea className="flex-1 p-4">
+            <div className="space-y-4">
+              <ChatMessages
+                messages={messages}
+                loading={loading}
+                messagesEndRef={messagesEndRef}
+              />
+            </div>
+          </ScrollArea>
+
           {error && (
-            <div className="mx-3 mb-2 text-xs text-red-600 bg-red-50 px-3 py-1.5 rounded">
-              {error}
+            <div className="mx-3 mb-2">
+              <Alert variant="destructive" className="py-1.5">
+                <AlertDescription className="text-xs">{error}</AlertDescription>
+              </Alert>
             </div>
           )}
 
-          {/* Input */}
-          <div className="border-t border-gray-200 p-3">
-            <div className="flex gap-2">
-              <input
-                ref={inputRef}
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Type a message..."
-                disabled={loading}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
-              />
-              <button
-                onClick={handleSend}
-                disabled={loading || !input.trim()}
-                className="px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Send
-              </button>
-            </div>
+          <div className="border-t p-3">
+            <ChatInput
+              input={input}
+              setInput={setInput}
+              loading={loading}
+              onSend={handleSend}
+              inputRef={inputRef}
+            />
           </div>
-        </div>
+        </Card>
       )}
 
-      {/* Floating button — always fixed bottom-right */}
-      <button
+      <Button
         onClick={() => setOpen((v) => !v)}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 flex items-center justify-center transition-transform hover:scale-105"
+        className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg"
+        size="icon"
         aria-label={open ? "Close chat" : "Open chat"}
       >
         {open ? (
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
+          <X className="h-6 w-6" />
         ) : (
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-          </svg>
+          <MessageSquare className="h-6 w-6" />
         )}
-      </button>
+      </Button>
     </>
   );
 }

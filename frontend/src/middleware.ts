@@ -9,7 +9,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  if (!sessionCookie && pathname.startsWith("/dashboard")) {
+  if (!sessionCookie && (pathname.startsWith("/dashboard") || pathname.startsWith("/chat"))) {
     return NextResponse.redirect(new URL("/signin", request.url));
   }
 
@@ -17,5 +17,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/signin", "/signup"],
+  matcher: ["/dashboard/:path*", "/chat/:path*", "/signin", "/signup"],
 };

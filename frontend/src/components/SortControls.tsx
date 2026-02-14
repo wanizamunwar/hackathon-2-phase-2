@@ -1,5 +1,15 @@
 "use client";
 
+import { ArrowUpDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
 interface SortControlsProps {
   sortBy: string;
   onSortByChange: (value: string) => void;
@@ -15,24 +25,26 @@ export default function SortControls({
 }: SortControlsProps) {
   return (
     <div className="flex items-center gap-2">
-      <span className="text-sm text-gray-600">Sort by:</span>
-      <select
-        value={sortBy}
-        onChange={(e) => onSortByChange(e.target.value)}
-        className="px-2 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-      >
-        <option value="created_at">Date Created</option>
-        <option value="priority">Priority</option>
-        <option value="title">Title</option>
-      </select>
+      <span className="text-sm text-muted-foreground">Sort by:</span>
+      <Select value={sortBy} onValueChange={onSortByChange}>
+        <SelectTrigger className="w-[150px]">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="created_at">Date Created</SelectItem>
+          <SelectItem value="priority">Priority</SelectItem>
+          <SelectItem value="title">Title</SelectItem>
+        </SelectContent>
+      </Select>
 
-      <button
+      <Button
+        variant="outline"
+        size="icon"
         onClick={() => onSortOrderChange(sortOrder === "asc" ? "desc" : "asc")}
-        className="px-2 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-50"
         title={sortOrder === "asc" ? "Ascending" : "Descending"}
       >
-        {sortOrder === "asc" ? "\u2191 Asc" : "\u2193 Desc"}
-      </button>
+        <ArrowUpDown className="h-4 w-4" />
+      </Button>
     </div>
   );
 }

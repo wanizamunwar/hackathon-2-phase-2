@@ -1,6 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import { CheckSquare, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface AuthFormProps {
   mode: "signin" | "signup";
@@ -29,96 +42,101 @@ export default function AuthForm({ mode, onSubmit }: AuthFormProps) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
-        <div>
-          <h2 className="text-center text-3xl font-bold text-gray-900">
-            {mode === "signin" ? "Sign in to your account" : "Create your account"}
-          </h2>
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center space-y-2">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+            <CheckSquare className="h-6 w-6" />
+          </div>
+          <CardTitle className="text-2xl">
+            {mode === "signin" ? "Welcome back" : "Create an account"}
+          </CardTitle>
+          <CardDescription>
+            {mode === "signin"
+              ? "Sign in to your account to continue"
+              : "Sign up to start managing your tasks"}
+          </CardDescription>
+        </CardHeader>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-              {error}
-            </div>
-          )}
+        <form onSubmit={handleSubmit}>
+          <CardContent className="space-y-4">
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
 
-          {mode === "signup" && (
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                Name
-              </label>
-              <input
-                id="name"
-                type="text"
+            {mode === "signup" && (
+              <div className="space-y-2">
+                <Label htmlFor="name">Name</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Your name"
+                />
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
                 required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Your name"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
               />
             </div>
-          )}
 
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-              Email address
-            </label>
-            <input
-              id="email"
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              placeholder="you@example.com"
-            />
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                required
+                minLength={8}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Minimum 8 characters"
+              />
+            </div>
+          </CardContent>
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              required
-              minLength={8}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              placeholder="••••••••"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? "Loading..." : mode === "signin" ? "Sign In" : "Sign Up"}
-          </button>
-
-          <p className="text-center text-sm text-gray-600">
-            {mode === "signin" ? (
-              <>
-                Don&apos;t have an account?{" "}
-                <a href="/signup" className="text-blue-600 hover:text-blue-500">
-                  Sign up
-                </a>
-              </>
-            ) : (
-              <>
-                Already have an account?{" "}
-                <a href="/signin" className="text-blue-600 hover:text-blue-500">
-                  Sign in
-                </a>
-              </>
-            )}
-          </p>
+          <CardFooter className="flex flex-col gap-4">
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {mode === "signin" ? "Sign In" : "Sign Up"}
+            </Button>
+            <p className="text-center text-sm text-muted-foreground">
+              {mode === "signin" ? (
+                <>
+                  Don&apos;t have an account?{" "}
+                  <a
+                    href="/signup"
+                    className="font-medium text-primary underline-offset-4 hover:underline"
+                  >
+                    Sign up
+                  </a>
+                </>
+              ) : (
+                <>
+                  Already have an account?{" "}
+                  <a
+                    href="/signin"
+                    className="font-medium text-primary underline-offset-4 hover:underline"
+                  >
+                    Sign in
+                  </a>
+                </>
+              )}
+            </p>
+          </CardFooter>
         </form>
-      </div>
+      </Card>
     </div>
   );
 }
